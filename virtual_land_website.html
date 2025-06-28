@@ -1,0 +1,122 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virtual Land Empire</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    #canvas {
+      background: white;
+      cursor: crosshair;
+      display: block;
+    }
+    #infoPanel {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #ccc;
+      padding: 10px;
+      z-index: 10;
+      font-family: sans-serif;
+    }
+    #buyForm {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    #buyForm input, #buyForm textarea {
+      width: 100%;
+      padding: 5px;
+    }
+    .plot {
+      position: absolute;
+      background: rgba(173, 216, 230, 0.5);
+      border: 1px solid #00f;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div id="infoPanel">
+    <b>Virtual Land Empire 👑</b>
+    <p>Click and drag to select your land</p>
+    <div id="buyForm">
+      <input type="text" id="name" placeholder="Your Name">
+      <textarea id="message" placeholder="Your message (optional)"></textarea>
+      <input type="file" id="paymentProof">
+      <button onclick="confirmBuy()">Send Request</button>
+    </div>
+  </div>
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let startX, startY, isDrawing = false;
+    let selectedArea = null;
+
+    const buyForm = document.getElementById("buyForm");
+
+    canvas.addEventListener("mousedown", (e) => {
+      startX = e.offsetX;
+      startY = e.offsetY;
+      isDrawing = true;
+    });
+
+    canvas.addEventListener("mouseup", (e) => {
+      if (!isDrawing) return;
+      isDrawing = false;
+      const endX = e.offsetX;
+      const endY = e.offsetY;
+      const x = Math.min(startX, endX);
+      const y = Math.min(startY, endY);
+      const w = Math.abs(endX - startX);
+      const h = Math.abs(endY - startY);
+      if (w < 10 || h < 10) return;
+      selectedArea = {x, y, w, h};
+      buyForm.style.display = "flex";
+    });
+
+    function confirmBuy() {
+      const name = document.getElementById("name").value;
+      const msg = document.getElementById("message").value;
+      const proof = document.getElementById("paymentProof").files[0];
+
+      if (!name || !proof) {
+        alert("Please enter your name and upload payment proof.");
+        return;
+      }
+
+      const div = document.createElement("div");
+      div.className = "plot";
+      div.style.left = selectedArea.x + "px";
+      div.style.top = selectedArea.y + "px";
+      div.style.width = selectedArea.w + "px";
+      div.style.height = selectedArea.h + "px";
+      div.innerText = name;
+      div.style.display = "flex";
+      div.style.justifyContent = "center";
+      div.style.alignItems = "center";
+      document.body.appendChild(div);
+
+      buyForm.style.display = "none";
+      document.getElementById("name").value = "";
+      document.getElementById("message").value = "";
+      document.getElementById("paymentProof").value = null;
+      selectedArea = null;
+
+      alert("Thanks! We will verify your payment and make your land official.");
+    }
+  </script>
+</body>
+</html>

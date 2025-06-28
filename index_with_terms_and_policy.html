@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Virtual Land Empire 👑</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    #canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+    #infoPanel {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: white;
+      padding: 10px;
+      z-index: 10;
+      font-family: sans-serif;
+      width: 250px;
+    }
+    #buyForm {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    #buyForm input, #buyForm textarea, #buyForm select {
+      width: 100%;
+      padding: 5px;
+    }
+    #ownerList {
+      margin-top: 20px;
+      font-size: 14px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .plot {
+      position: absolute;
+      border: 1px solid #00f;
+      pointer-events: none;
+      z-index: 5;
+      font-size: 12px;
+      color: #000;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div id="infoPanel">
+    <b>Virtual Land Empire 👑</b>
+    <p>Click and drag to select your land</p>
+
+    <h3>💰 Payment Instructions</h3>
+    <p><b>Account Holder Name:</b> Jagrit Kushwaha</p>
+    <p><b>Bank Name:</b> Bank of Baroda</p>
+    <p><b>Account Number:</b> 24918100042851</p>
+    <p><b>IFSC Code:</b> BARB0SHIVMP</p>
+    <p>After sending payment using NEFT/IMPS, please upload your payment screenshot below.</p>
+
+    <div id="buyForm">
+      <input type="text" id="name" placeholder="Your Name">
+      <textarea id="message" placeholder="Your message (optional)"></textarea>
+      <input type="file" id="paymentProof">
+      <label>Choose Land Color:</label>
+      <input type="color" id="landColor" value="#add8e6">
+      <button onclick="confirmBuy()">Send Request</button>
+      <p id="areaDisplay">Area: 0 px²</p>
+      <p id="priceDisplay">Price: ₹0</p>
+    </div>
+    
+    <hr>
+    <div style="font-size: 12px; margin-top: 10px;">
+      <b>📜 Terms & Policies</b>
+      <p>By submitting a land request and uploading payment proof, you agree that your land will be reserved only after manual payment verification.</p>
+      <p>This site does not support refunds. Ownership is stored in your browser. If you clear data, your land will be removed.</p>
+      <p>Payments must be made only to the bank account shown above. Fake proofs will be rejected.</p>
+    </div>
+    <div id="ownerList">
+    <b>Land Owners:</b><ul id="ownerUL"></ul></div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let startX, startY, isDrawing = false;
+    let selectedArea = null;
+    const buyForm = document.getElementById("buyForm");
+    const ownerUL = document.getElementById("ownerUL");
+
+    function loadSavedPlots() {
+      const saved = JSON.parse(localStorage.getItem("plots") || "[]");
+      saved.forEach(plot => {
+        drawPlot(plot);
+        addOwnerToList(plot.name);
+      });
+    }
+
+    function drawPlot(plot) {
+      const div = document.createElement("div");
+      div.className = "plot";
+      div.style.left = plot.x + "px";
+      div.style.top = plot.y + "px";
+      div.style.width = plot.w + "px";
+      div.style.height = plot.h + "px";
+      div.style.background = plot.color + "80";
+      div.style.borderColor = plot.color;
+      div.innerText = plot.area > 30000 ? plot.name + " 👑" : plot.name;
+      document.body.appendChild(div);
+    }
+
+    function addOwnerToList(name) {
+      const li = document.createElement("li");
+      li.innerText = name;
+      ownerUL.appendChild(li);
+    }
+
+    canvas.addEventListener("mousedown", (e) => {
+      startX = e.offsetX;
+      startY = e.offsetY;
+      isDrawing = true;
+    });
+
+    canvas.addEventListener("mouseup", (e) => {
+      if (!isDrawing) return;
+      isDrawing = false;
+      const endX = e.offsetX;
+      const endY = e.offsetY;
+      const x = Math.min(startX, endX);
+      const y = Math.min(startY, endY);
+      const w = Math.abs(endX - startX);
+      const h = Math.abs(endY - startY);
+      if (w < 10 || h < 10) return;
+      selectedArea = { x, y, w, h };
+      const area = w * h;
+      const price = area * 1;
+      document.getElementById("areaDisplay").innerText = "Area: " + area + " px²";
+      document.getElementById("priceDisplay").innerText = "Price: ₹" + price;
+      buyForm.style.display = "flex";
+    });
+
+    function confirmBuy() {
+      const name = document.getElementById("name").value;
+      const msg = document.getElementById("message").value;
+      const proof = document.getElementById("paymentProof").files[0];
+      const color = document.getElementById("landColor").value;
+      if (!name || !proof) {
+        alert("Please enter your name and upload payment proof.");
+        return;
+      }
+      const area = selectedArea.w * selectedArea.h;
+      const newPlot = {
+        name: name,
+        x: selectedArea.x,
+        y: selectedArea.y,
+        w: selectedArea.w,
+        h: selectedArea.h,
+        area: area,
+        color: color
+      };
+
+      drawPlot(newPlot);
+      addOwnerToList(name);
+
+      const savedPlots = JSON.parse(localStorage.getItem("plots") || "[]");
+      savedPlots.push(newPlot);
+      localStorage.setItem("plots", JSON.stringify(savedPlots));
+
+      document.getElementById("name").value = "";
+      document.getElementById("message").value = "";
+      document.getElementById("paymentProof").value = null;
+      buyForm.style.display = "none";
+      selectedArea = null;
+
+      alert("Thanks! Your land has been added and saved in your browser.");
+    }
+
+    loadSavedPlots();
+  </script>
+</body>
+</html>
