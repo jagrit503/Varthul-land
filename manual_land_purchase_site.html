@@ -1,0 +1,120 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Virtual Land Empire 👑</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background: #f9f9f9;
+    }
+    #infoPanel {
+      max-width: 400px;
+      margin: 40px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 15px;
+      font-size: 16px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    #landList {
+      margin-top: 20px;
+    }
+    .landItem {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+
+<div id="infoPanel">
+  <h2>Virtual Land Empire 👑</h2>
+  <p>Buy your land by filling this form:</p>
+
+  <input type="text" id="name" placeholder="Your Name" />
+  <input type="number" id="width" placeholder="Land Width (px)" />
+  <input type="number" id="height" placeholder="Land Height (px)" />
+  <input type="color" id="landColor" value="#add8e6" />
+  <input type="file" id="paymentProof" />
+  <textarea id="message" placeholder="Optional message"></textarea>
+  <button onclick="submitLand()">Submit Land Purchase</button>
+
+  <div id="landList">
+    <h3>Your Saved Lands:</h3>
+    <div id="landItems"></div>
+  </div>
+</div>
+
+<script>
+  function submitLand() {
+    const name = document.getElementById("name").value;
+    const width = parseInt(document.getElementById("width").value);
+    const height = parseInt(document.getElementById("height").value);
+    const color = document.getElementById("landColor").value;
+    const proof = document.getElementById("paymentProof").files[0];
+
+    if (!name || !width || !height || !proof) {
+      alert("Please fill in all fields and upload payment proof.");
+      return;
+    }
+
+    const land = {
+      name,
+      width,
+      height,
+      color,
+      area: width * height
+    };
+
+    let lands = JSON.parse(localStorage.getItem("lands") || "[]");
+    lands.push(land);
+    localStorage.setItem("lands", JSON.stringify(lands));
+    showLands();
+
+    alert("Your land purchase is saved! We will verify your payment.");
+    document.getElementById("name").value = "";
+    document.getElementById("width").value = "";
+    document.getElementById("height").value = "";
+    document.getElementById("message").value = "";
+    document.getElementById("paymentProof").value = null;
+  }
+
+  function showLands() {
+    const landItems = document.getElementById("landItems");
+    landItems.innerHTML = "";
+    const lands = JSON.parse(localStorage.getItem("lands") || "[]");
+    lands.forEach(land => {
+      const div = document.createElement("div");
+      div.className = "landItem";
+      div.innerHTML = `<b>${land.name}</b> – ${land.width}×${land.height}px – Area: ${land.area}px² – Color: <span style="display:inline-block;width:15px;height:15px;background:${land.color};border:1px solid #ccc;"></span>`;
+      landItems.appendChild(div);
+    });
+  }
+
+  showLands();
+</script>
+
+</body>
+</html>
